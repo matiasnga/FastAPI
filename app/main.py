@@ -6,6 +6,6 @@ app = FastAPI()
 app.include_router(certificates.router)
 
 
-@app.get("/health")
-def health_check():
+@app.get("/health", include_in_schema=False)
+def health():
     return {"Status": "UP"}
