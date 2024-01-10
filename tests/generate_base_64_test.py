@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
+# Ejemplo con ruta relativa
 
 client = TestClient(app)
 

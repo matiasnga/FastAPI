@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
 
+app = FastAPI()
+
 
 class PreviewRequest(BaseModel):
     taxpayerId: int
@@ -35,9 +37,6 @@ class GenerateBase64Request(BaseModel):
 class GenerateBase64Response(BaseModel):
     filename: str | None = None
     base64: str | None = None
-
-
-app = FastAPI()
 
 
 @app.get("/v1/certificates", response_model=PreviewResponse)
