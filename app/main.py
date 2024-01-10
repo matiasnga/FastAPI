@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from .routers import certificates
+from .routers import certificates_router
 
 app = FastAPI()
 
-app.include_router(certificates.router)
+app.include_router(certificates_router.router)
 
 
 @app.get("/health", include_in_schema=False)
