@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from .routers import certificates_router
-
 app = FastAPI()
 
 app.include_router(certificates_router.router)

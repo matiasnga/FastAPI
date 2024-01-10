@@ -1,17 +1,22 @@
+import logging
+
 from fastapi import APIRouter
-from ..models.preview_model import *
-from ..models.generate_base_64_model import *
+from app.models.preview_model import PreviewRequest, PreviewResponse
+from app.models.generate_base_64_model import GenerateBase64Request, GenerateBase64Response
+from app.services import preview_service
 
 router = APIRouter()
 
 
 @router.get("/v1/certificates", response_model=PreviewResponse)
-def get_preview(taxpayerId: int, period: int, withholdingGroupingId: int | None = None):
-    request_data = PreviewRequest(taxpayerId=taxpayerId, period=period, withholdingGroupingId=withholdingGroupingId)
-    certificate_1 = CertificateResponse(taxId=216, netAmount=1222.0, withholdingAmount=12.2, rate=0.1)
-    certificate_2 = CertificateResponse(taxId=217, netAmount=222.0, withholdingAmount=2.2, rate=0.02)
-    response_preview = PreviewResponse(**request_data.model_dump(), certificates=[certificate_1, certificate_2])
+def get_preview(taxpayerId: int, period: int, withholdingGroupingId: str | None = None):
+    request_data = PreviewRequest(companyId=30716829436, taxpayerId=taxpayerId, period=period,
+                                  withholdingGroupingId=withholdingGroupingId)
+    response_preview = preview_service.get_preview_response(request_data)
+    logging.info(response_preview)
     return response_preview
+
+
 
 
 @router.post("/v1/certificates", response_model=GenerateBase64Response)

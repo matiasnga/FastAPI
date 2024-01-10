@@ -3,9 +3,10 @@ from pydantic import BaseModel
 
 
 class PreviewRequest(BaseModel):
+    companyId: int | None = None
     taxpayerId: int
     period: int
-    withholdingGroupingId: Optional[int] = None
+    withholdingGroupingId: Optional[str] = None
 
 
 class CertificateResponse(BaseModel):
@@ -16,9 +17,9 @@ class CertificateResponse(BaseModel):
 
 
 class PreviewResponse(BaseModel):
-    companyId: int | None = 30716829436
+    companyId: int
     taxpayerId: int
-    withholdingGroupingId: int | None = None
+    withholdingGroupingId: str | None = None
     period: int
     totalWithholdingAmount: float | None = 0
     certificates: List[CertificateResponse]
