@@ -1,41 +1,6 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import List, Optional
-
-
-class PreviewRequest(BaseModel):
-    taxpayerId: int
-    period: int
-    withholdingGroupingId: Optional[int] = None
-
-
-class CertificateResponse(BaseModel):
-    taxId: int
-    netAmount: float
-    withholdingAmount: float
-    rate: float
-
-
-class PreviewResponse(BaseModel):
-    companyId: int | None = 30716829436
-    taxpayerId: int
-    withholdingGroupingId: int | None = None
-    period: int
-    totalWithholdingAmount: float | None = 0
-    certificates: List[CertificateResponse]
-
-
-class GenerateBase64Request(BaseModel):
-    taxpayerId: int
-    taxId: int
-    period: int
-    withholdingGroupingId: Optional[int] = None
-
-
-class GenerateBase64Response(BaseModel):
-    filename: str | None = None
-    base64: str | None = None
-
+from ..models.preview_model import *
+from ..models.generate_base_64_model import *
 
 router = APIRouter()
 
