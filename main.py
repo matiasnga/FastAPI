@@ -31,8 +31,10 @@ app = FastAPI()
 @app.get("/v1/certificates", response_model=PreviewResponse)
 def get_preview(taxpayerId: int, period: int, withholdingGroupingId: int | None = None):
     request_data = PreviewRequest(taxpayerId=taxpayerId, period=period, withholdingGroupingId=withholdingGroupingId)
-    certificate = CertificateResponse(taxId=216, netAmount=1222.0, withholdingAmount=12.2, rate=0.1)
-    response_preview = PreviewResponse(**request_data.dict(), certificates=[certificate])
+    certificate_1 = CertificateResponse(taxId=216, netAmount=1222.0, withholdingAmount=12.2, rate=0.1)
+    certificate_2 = CertificateResponse(taxId=217, netAmount=1222.0, withholdingAmount=12.2, rate=0.1)
+
+    response_preview = PreviewResponse(**request_data.dict(), certificates=[certificate_1, certificate_2])
 
     return response_preview
 
