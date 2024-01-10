@@ -17,6 +17,7 @@ def read_file_from_s3(company_id: int, period: int):
                                  aws_secret_access_key=os.getenv('SECRET_ACCESS_KEY'))
         s3_object = s3_client.get_object(Bucket=bucket_name, Key=file_location)
         response = json.loads(s3_object['Body'].read().decode('utf-8'))
+
         logging.info(f'Cantidad de certificados encontrados: {len(response)} en {bucket_name} {file_location}')
 
     except Exception as e:
