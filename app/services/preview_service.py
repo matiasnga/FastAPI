@@ -61,4 +61,5 @@ def get_preview_response(preview_request: PreviewRequest):
     for certificate in dictionary_response.get("certificates", []):
         certificate['withholdingAmount'] = round(certificate['withholdingAmount'], 2)
         certificate.pop("count", None)
+    dictionary_response['totalWithholdingAmount'] = round(dictionary_response['totalWithholdingAmount'], 2)
     return PreviewResponse(**dictionary_response)

@@ -6,7 +6,7 @@ class GenerateBase64Request(BaseModel):
     taxpayerId: int
     taxId: int
     period: int
-    withholdingGroupingId: Optional[int] = None
+    withholdingGroupingId: Optional[str] = None
 
 
 class GenerateBase64Response(BaseModel):
