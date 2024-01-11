@@ -4,7 +4,7 @@ from unittest.mock import patch
 import boto3
 from fastapi.testclient import TestClient
 from moto import mock_s3
-from app.main import app
+from main import app
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 client = TestClient(app)
