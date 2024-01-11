@@ -3,7 +3,6 @@ import boto3
 import json
 from dotenv import load_dotenv
 import logging
-from app.models.preview_model import *
 
 load_dotenv()
 
