@@ -3,7 +3,8 @@ import boto3
 import json
 from dotenv import load_dotenv
 import logging
-from app.models.generate_base_64_model import GenerateBase64Request
+
+from app.dto.request.generate_base_64_request_dto import GenerateBase64Request
 
 load_dotenv()
 

@@ -3,9 +3,10 @@ import PyPDF2
 import pdfkit
 from jinja2 import Template
 
+from app.dto.request.generate_base_64_request_dto import GenerateBase64Request
 from app.repository import s3_repository
 from app.services import utils_service
-from app.models.generate_base_64_model import GenerateBase64Request, GenerateBase64Response
+from app.dto.response.generate_base_64_response_dto import GenerateBase64Response
 
 
 def generate_base_64_file(generateBase64Request: GenerateBase64Request, company_id: int):

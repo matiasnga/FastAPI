@@ -2,13 +2,6 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class PreviewRequest(BaseModel):
-    companyId: int | None = None
-    taxpayerId: int
-    period: int
-    withholdingGroupingId: Optional[str] = None
-
-
 class CertificateResponse(BaseModel):
     taxId: int
     netAmount: float

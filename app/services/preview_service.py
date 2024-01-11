@@ -1,9 +1,8 @@
-import logging
-
 from app.services.utils_service import convert_to_float, convert_rate_to_float
 
 from app.repository import s3_repository
-from app.models.preview_model import PreviewRequest, PreviewResponse
+from app.dto.response.preview_response_dto import PreviewResponse
+from app.dto.request.preview_request_dto import PreviewRequest
 
 
 def get_preview_response(preview_request: PreviewRequest):
