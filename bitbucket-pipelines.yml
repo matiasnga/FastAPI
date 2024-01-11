@@ -1,0 +1,142 @@
+definitions:
+  steps:
+    - step: &chargeEnvironments
+        runs-on:
+          - 'runner.02'
+        name: 'Charge environments Variables'
+        script:
+          - echo "Passing all ${ENV} env variables to next steps"
+          - >-
+            echo "
+            export IMAGE_NAME=$IMAGE_NAME;
+            export ENV=$ENV;
+            export TASK_DEFINITION_NAME=$TASK_DEFINITION_NAME;
+            export REPOSITORY_URL_NEW=$AWS_ECR_REPOSITORY;
+            export ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME;
+            export ECS_SERVICE_NAME=$ECS_SERVICE_NAME;
+            export AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID;
+            
+            " >> set_env.sh
+        artifacts:
+          - set_env.sh
+    - step: &build
+        runs-on:
+          - 'runner.02'
+        name: 'Build'
+        image: python:3.9-slim
+        script:
+          - pip install --upgrade setuptools
+          - pip install ez_setup
+          - pip install -r requirements.txt
+          - pytest
+        caches:
+          - pip
+    - step: &push
+        runs-on:
+          - 'runner.02'
+        name: 'Push AWS'
+        script:
+          # check if env file exists
+          - if [ -e set_env.sh ]; then
+          - cat set_env.sh
+          - source set_env.sh
+          - fi
+          - echo "Starting"
+          - docker build -t $IMAGE_NAME:$BITBUCKET_BUILD_NUMBER -t $IMAGE_NAME .
+          - echo "Push to ECR Repository"
+          - pipe: atlassian/aws-ecr-push-image:2.0.0
+            variables:
+              IMAGE_NAME: $IMAGE_NAME
+              AWS_ROLE_ARN: "arn:aws:iam::$AWS_ACCOUNT_ID:role/pgl-$ENV-bitbucket-runner"
+              AWS_ROLE_SESSION_NAME: "my-assumed-role"
+              TAGS: "${BITBUCKET_BUILD_NUMBER} latest"
+          - echo "Finish"
+    - step: &deployECS
+        runs-on:
+          - 'runner.02'
+        name: 'Deploy ECS Task'
+        image: amazon/aws-cli:2.11.15
+        trigger: 'manual'
+        script:
+          - yum -y update && yum -y install jq
+          # check if env file exists
+          - if [ -e set_env.sh ]; then
+          - cat set_env.sh
+          - source set_env.sh
+          - fi
+          - echo "Starting"
+          - echo "Assume role "
+          - TEMP_ACCESS_ACCOUNT=$(aws sts assume-role --role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/pgl-$ENV-bitbucket-runner --role-session-name AWSCLI-Session)
+          - export AWS_ACCESS_KEY_ID=$(echo ${TEMP_ACCESS_ACCOUNT} | jq -r '.["Credentials"]["AccessKeyId"]')
+          - export AWS_SECRET_ACCESS_KEY=$(echo ${TEMP_ACCESS_ACCOUNT} | jq -r '.["Credentials"]["SecretAccessKey"]')
+          - export AWS_SESSION_TOKEN=$(echo ${TEMP_ACCESS_ACCOUNT} | jq -r '.["Credentials"]["SessionToken"]')
+          - echo "Deploying images..."
+          - echo `aws ecs describe-task-definition --task-definition  $TASK_DEFINITION_NAME --region $AWS_DEFAULT_REGION` > deploy.json
+          - echo $(cat deploy.json | jq '.taskDefinition.containerDefinitions[].image="'$REPOSITORY_URL_NEW':'$BITBUCKET_BUILD_NUMBER'"') > deploy.json
+          - echo $(cat deploy.json | jq '.taskDefinition') > deploy.json
+          - echo $(cat deploy.json | jq  'del(.taskDefinitionArn)' | jq 'del(.revision)' | jq 'del(.status)' | jq 'del(.requiresAttributes)' | jq 'del(.compatibilities)'| jq 'del(.registeredAt)' |jq 'del(.registeredBy)') > deploy.json
+          - aws ecs register-task-definition --cli-input-json file://deploy.json  --region $AWS_DEFAULT_REGION
+          - revision=$(aws ecs describe-task-definition --task-definition $TASK_DEFINITION_NAME --region $AWS_DEFAULT_REGION | egrep "revision" | tr "/" " " | awk '{print $2}' | sed 's/"$//' | cut -d "," -f 1)
+          - aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $ECS_SERVICE_NAME  --task-definition $TASK_DEFINITION_NAME:$revision --region $AWS_DEFAULT_REGION
+          - echo "Finish"
+    - step: &deployLAMBDA
+        runs-on:
+          - 'runner.02'
+        name: 'Deploy Lambda on AWS account $ENV'
+        image: amazon/aws-cli:2.11.15
+        trigger: 'manual'
+        script:
+          - echo "Starting"
+          - yum -y update && yum -y install jq
+          - if [ -e set_env.sh ]; then
+          - cat set_env.sh
+          - source set_env.sh
+          - fi
+          - echo "Starting"
+          - echo "Assume role "
+          - TEMP_ACCESS_ACCOUNT=$(aws sts assume-role --role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/pgl-$ENV-bitbucket-runner --role-session-name AWSCLI-Session)
+          - export AWS_ACCESS_KEY_ID=$(echo ${TEMP_ACCESS_ACCOUNT} | jq -r '.["Credentials"]["AccessKeyId"]')
+          - export AWS_SECRET_ACCESS_KEY=$(echo ${TEMP_ACCESS_ACCOUNT} | jq -r '.["Credentials"]["SecretAccessKey"]')
+          - export AWS_SESSION_TOKEN=$(echo ${TEMP_ACCESS_ACCOUNT} | jq -r '.["Credentials"]["SessionToken"]')
+          - echo "Deploy the new lambda Version (start) ..."
+          - aws --version
+          - DEPLOYMENT_VERSION=$(aws lambda update-function-code --function-name $FUNCTION_NAME --zip-file fileb://$BITBUCKET_CLONE_DIR/function.zip --publish | jq -r '.Version') ; if [ $? -ne 0 ]; then exit 1; fi
+          - echo "Depoyed version ($FUNCTION_NAME) = $DEPLOYMENT_VERSION"
+          - echo "Finish"
+
+pipelines:
+  branches:
+    "{feature/*,hotfix/*,release/*}":
+      - step:
+          <<: *chargeEnvironments
+          deployment: Dev
+      - step: *build
+      - step:
+          <<: *push
+          trigger: manual
+      - step:
+          <<: *deployECS
+          trigger: manual
+    develop:
+      - step:
+          <<: *chargeEnvironments
+          deployment: Dev
+      - step: *build
+      - step: *push
+      - step: *deployECS
+    staging:
+      - step:
+          <<: *chargeEnvironments
+          deployment: Staging
+      - step: *build
+      - step: *push
+      - step: *deployECS
+    master:
+      - step:
+          <<: *chargeEnvironments
+          deployment: Production
+      - step: *build
+      - step: *push
+      - step:
+          <<: *deployECS
+          trigger: manual
