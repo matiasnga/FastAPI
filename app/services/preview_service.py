@@ -1,4 +1,4 @@
-from app.services.utils_service import convert_to_float, convert_rate_to_float
+from app.services.utils_service import convert_str_to_float, convert_rate_to_float
 
 from app.repository import s3_repository
 from app.dto.response.preview_response_dto import PreviewResponse
@@ -17,9 +17,9 @@ def get_preview_response(preview_request: PreviewRequest):
                 and certificate['IdAgrupacionRetenciones'] == preview_request.withholdingGroupingId:
             certificates_filtered.append(certificate)
             dictionary_response['certificates'].append({'taxId': certificate['Impuesto'],
-                                                        'netAmount': convert_to_float(
+                                                        'netAmount': convert_str_to_float(
                                                             certificate['Retenciones'][0]['BaseRetencion']),
-                                                        'withholdingAmount': convert_to_float(
+                                                        'withholdingAmount': convert_str_to_float(
                                                             certificate['Retenciones'][0]['Retencion']),
                                                         'rate': convert_rate_to_float(
                                                             certificate['Retenciones'][0]['Alicuota'])

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from moto import mock_s3
 from app.main import app
 
+current_directory = os.path.dirname(os.path.abspath(__file__))
 client = TestClient(app)
 
 
@@ -18,7 +19,7 @@ def test_get_preview_with_valid_params_return_preview_200():
     s3 = boto3.client('s3')
     s3.create_bucket(Bucket=bucket_name)
 
-    with open(os.path.abspath('tests/data_test/30716829436_202312.txt'), 'r', encoding='utf-8') as file:
+    with open(os.path.abspath(f'{current_directory}/data_test/30716829436_202312.txt'), 'r', encoding='utf-8') as file:
         data_content = file.read()
 
     s3.put_object(Bucket=bucket_name, Key=key, Body=data_content)

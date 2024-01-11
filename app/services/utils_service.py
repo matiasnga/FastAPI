@@ -1,7 +1,8 @@
 import base64
+import io
 
 
-def convertir_a_base64(pdf_in_memory):
+def convert_bytes_to_base64(pdf_in_memory):
     try:
         data = pdf_in_memory.read()
         base64_data = base64.b64encode(data).decode('utf-8')
@@ -10,7 +11,7 @@ def convertir_a_base64(pdf_in_memory):
         print(f"Error al convertir a base64: {e}")
 
 
-def get_pdf_options(output_file):
+def get_pdf_options():
     return {
         'page-size': 'A4',
         'margin-top': '20mm',
@@ -19,7 +20,6 @@ def get_pdf_options(output_file):
         'margin-left': '20mm',
         'encoding': "UTF-8",
         'enable-local-file-access': '',
-        'title': output_file,
         'no-outline': None,
         'footer-left': 'Página [page]/[topage]',
         'footer-font-size': 9,
@@ -27,10 +27,23 @@ def get_pdf_options(output_file):
     }
 
 
-def convert_to_float(value_str):
+def convert_str_to_float(value_str):
     cleaned_str = value_str.replace('.', '').replace(',', '.').replace('$ ', '')
     return float(cleaned_str)
 
 
 def convert_rate_to_float(value_str):
     return float(value_str.replace('%', '').replace(',', '.')) / 100
+
+
+def convert_file_to_bytes(file_path):
+    try:
+        with open(file_path, 'rb') as file:
+            binary_data = file.read()
+            bytesio_object = io.BytesIO(binary_data)
+        return bytesio_object
+    except Exception as e:
+        print(f"Error al procesar el archivo: {str(e)}")
+        return None
+
+
